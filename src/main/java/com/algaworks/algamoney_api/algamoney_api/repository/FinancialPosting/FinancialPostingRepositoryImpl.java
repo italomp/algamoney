@@ -9,6 +9,9 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +22,7 @@ public class FinancialPostingRepositoryImpl implements FinancialPostingRepositor
     private EntityManager manager;
 
     @Override
-    public List<FinancialPosting> filter(FinancialPostingFilter financialPostingFilter) {
+    public Page<FinancialPosting> filter(FinancialPostingFilter financialPostingFilter, Pageable pageable) {
         CriteriaBuilder builder = manager.getCriteriaBuilder();
         CriteriaQuery<FinancialPosting> criteria = builder.createQuery(FinancialPosting.class);
         Root<FinancialPosting> root = criteria.from(FinancialPosting.class);
@@ -28,7 +31,30 @@ public class FinancialPostingRepositoryImpl implements FinancialPostingRepositor
         criteria.where(predicates);
         TypedQuery<FinancialPosting> query = manager.createQuery(criteria);
 
-        return query.getResultList();
+        handlePagination(query, pageable);
+
+        return new PageImpl<>(query.getResultList(), pageable, getTotalPostings(financialPostingFilter));
+    }
+
+    private Long getTotalPostings(FinancialPostingFilter financialPostingFilter) {
+        CriteriaBuilder builder = manager.getCriteriaBuilder();
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+        Root<FinancialPosting> root = criteria.from(FinancialPosting.class);
+
+        Predicate[] predicates = createConstraints(financialPostingFilter, builder, root);
+        criteria.where(predicates);
+
+        criteria.select(builder.count(root));
+        return manager.createQuery(criteria).getSingleResult();
+    }
+
+    private void handlePagination(TypedQuery<FinancialPosting> query, Pageable pageable) {
+        int currentPage = pageable.getPageNumber();
+        int totalByPage = pageable.getPageSize();
+        int firstPosting = currentPage * totalByPage;
+
+        query.setFirstResult(firstPosting);
+        query.setMaxResults(totalByPage);
     }
 
     public Predicate[] createConstraints(

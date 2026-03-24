@@ -8,9 +8,9 @@ import com.algaworks.algamoney_api.algamoney_api.repository.FinancialPostingRepo
 import com.algaworks.algamoney_api.algamoney_api.repository.PersonRepository;
 import com.algaworks.algamoney_api.algamoney_api.repository.filter.FinancialPostingFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class FinancialPostingService {
@@ -35,18 +35,8 @@ public class FinancialPostingService {
         return this.postingRepository.save(posting);
     }
 
-    public List<FinancialPosting> findAll(FinancialPostingFilter financialPostingFilter) {
-        List<FinancialPosting> result;
-        if (
-                financialPostingFilter.getDescription()  != null ||
-                financialPostingFilter.getExpirationDateFrom() != null ||
-                financialPostingFilter.getExpirationDateUntil() != null
-        ) {
-                 result = this.financialPostingRepository.filter(financialPostingFilter);
-        } else {
-            result = this.postingRepository.findAll();
-        }
-        return result;
+    public Page<FinancialPosting> findAll(FinancialPostingFilter financialPostingFilter, Pageable pageable) {
+        return this.financialPostingRepository.filter(financialPostingFilter, pageable);
     }
 
     public FinancialPosting findById(Long id) {
