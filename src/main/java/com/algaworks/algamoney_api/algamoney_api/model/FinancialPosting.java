@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Entity
 @Table(name = "financial_posting")
@@ -41,4 +42,19 @@ public class FinancialPosting {
     @ManyToOne
     @JoinColumn(name = "person_id")
     private Person person;
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        FinancialPosting that = (FinancialPosting) object;
+        return Objects.equals(id, that.id) && Objects.equals(description, that.description) &&
+                Objects.equals(expirationDate, that.expirationDate) && Objects.equals(paymentDate, that.paymentDate) &&
+                Objects.equals(price, that.price) && Objects.equals(note, that.note) && type == that.type &&
+                Objects.equals(category, that.category) && Objects.equals(person, that.person);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, description, expirationDate, paymentDate, price, note, type, category, person);
+    }
 }
